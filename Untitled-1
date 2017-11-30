@@ -1,0 +1,133 @@
+<script type="text/javascript">
+  
+  <?php
+	@$cartDataSession = $this->session->userdata('cart');
+	if($cartDataSession != '') {
+	?>
+
+	var cartArray = <?php echo $this->session->userdata('cart'); ?>;
+
+	<?php
+	} else {
+	?>
+
+	var cartArray = [];
+
+	<?php
+	}
+
+	?>
+	createCart();
+
+	function addToCart(productDetails) {
+
+		console.log(productDetails);
+		var productDetailsArray = productDetails.split("|");
+
+		var productID = Number(productDetailsArray[0]);
+		var productPrice = Number(productDetailsArray[1]);
+		var productName = productDetailsArray[2];
+		var itemExists = false;
+		
+		if(cartArray.length > 0) {
+
+			for(var i = 0; i < cartArray.length; i++) {
+
+				if(cartArray[i].id == productID) {
+
+					itemExists = true;
+					cartArray[i].qnty = cartArray[i].qnty + 1;
+					break;
+
+				}
+
+			}
+
+		}
+
+		if(itemExists == false) {
+
+			var singleProductArray = {};
+			singleProductArray.id = productID;
+			singleProductArray.price = productPrice;
+			singleProductArray.name = productName;
+			singleProductArray.qnty = 1;
+			cartArray.push(singleProductArray);
+
+		}
+
+		setCartToSession();
+		createCart();
+		// console.log(cartArray);
+		// console.log(cartDataJSON);
+	}
+
+	function setCartToSession(cartDataJSON) {
+
+		var cartDataJSON = JSON.stringify(cartArray);
+
+		var xhttp = new XMLHttpRequest();
+
+		xhttp.open("POST", "set_cart_to_session.php", true);
+		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		xhttp.send("cartData=" + cartDataJSON);
+
+	}
+
+	function createCart() {
+		console.log(cartArray);
+
+		var cartHTML =  '<div class="col-md-6 address">'+
+                        ' <label></label>'+
+                        '</div>';
+
+		if(cartArray.length == 0) {
+
+			cartHTML += '<div class="col-md-6 address">'+
+                        ' <label>$0.00</label>'+
+                        '</div>';
+		} else {
+
+			var grandTotal = 0;
+
+			for (var i = 0; i < cartArray.length; i++) {
+
+				var price = Number(cartArray[i].qnty * cartArray[i].price).toFixed(2);
+				grandTotal += Number(price);
+				cartHTML += '<div class="col-md-6 address">'+
+                             ' <label>$' + Number(grandTotal).toFixed(2); + '</label>'+
+                             '</div>';
+			}
+
+			
+		}
+
+		document.getElementById('cartTable').innerHTML = cartHTML;
+	
+	}
+
+	function increaseQnty(cartIndex) {
+
+		cartArray[cartIndex].qnty = cartArray[cartIndex].qnty + 1;
+		setCartToSession();
+		createCart();
+
+	}
+
+	function decreaseQnty(cartIndex) {
+
+		if(cartArray[cartIndex].qnty == 1) {
+
+			cartArray.splice(cartIndex,1);
+
+		} else {
+
+			cartArray[cartIndex].qnty = cartArray[cartIndex].qnty - 1;
+
+		}
+
+		setCartToSession();
+		createCart();
+
+	}
+</script>  
